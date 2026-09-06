@@ -1,0 +1,58 @@
+name: Subway Forever Live
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # Starts a fresh run roughly every 6 hours.
+    # GitHub schedules can sometimes be delayed.
+    - cron: "17 0,6,12,18 * * *"
+
+concurrency:
+  group: subway-youtube-live
+  cancel-in-progress: false
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Verify video
+        run: |
+          ls -lah
+          test -f subway.mp4
+
+      - name: Start vertical YouTube live
+        env:
+          YT_STREAM_KEY: ${{ secrets.YT_STREAM_KEY }}
+        run: |
+          ffmpeg \
+            -re \
+            -stream_loop -1 \
+            -i subway.mp4 \
+            -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30" \
+            -c:v libx264 \
+            -preset veryfast \
+            -profile:v high \
+            -level 4.1 \
+            -pix_fmt yuv420p \
+            -b:v 3000k \
+            -maxrate 3500k \
+            -bufsize 6000k \
+            -g 60 \
+            -keyint_min 60 \
+            -c:a aac \
+            -b:a 128k \
+            -ar 44100 \
+            -ac 2 \
+            -f flv \
+            "rtmp://a.rtmp.youtube.com/live2/${YT_STREAM_KEY}"
