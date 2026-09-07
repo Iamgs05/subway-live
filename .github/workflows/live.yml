@@ -20,7 +20,7 @@ jobs:
 
       - name: Download Subway video from Google Drive
         run: |
-          gdown "https://drive.google.com/uc?id=1EWdVldEE77Zc-Jhvj4JMy6ac0jxvKRbz" -O subway.mp4
+          gdown "https://drive.google.com/uc?id=1FIbWWkq_M6_O5AxgLPVp4yRZm8_eOqBB" -O subway.mp4
           ls -lh subway.mp4
           test -s subway.mp4
 
@@ -35,14 +35,11 @@ jobs:
             -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30" \
             -c:v libx264 \
             -preset veryfast \
-            -profile:v high \
-            -level 4.1 \
             -pix_fmt yuv420p \
             -b:v 3000k \
             -maxrate 3500k \
             -bufsize 6000k \
             -g 60 \
-            -keyint_min 60 \
             -c:a aac \
             -b:a 128k \
             -ar 44100 \
