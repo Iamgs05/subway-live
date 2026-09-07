@@ -3,10 +3,20 @@ name: Subway Forever Live
 on:
   workflow_dispatch:
 
+  schedule:
+    # UTC: 00:05, 06:05, 12:05, 18:05
+    - cron: "5 0,6,12,18 * * *"
+
+concurrency:
+  group: subway-youtube-live
+  cancel-in-progress: false
+
 jobs:
   stream:
     runs-on: ubuntu-latest
-    timeout-minutes: 355
+
+    # Stop slightly before GitHub's maximum hosted-runner time
+    timeout-minutes: 350
 
     steps:
       - name: Checkout
@@ -18,16 +28,22 @@ jobs:
           sudo apt-get install -y ffmpeg
           python -m pip install --upgrade gdown
 
-      - name: Download Subway video from Google Drive
+      - name: Download Subway video
         run: |
+          echo "Downloading gameplay..."
           gdown "https://drive.google.com/uc?id=1FIbWWkq_M6_O5AxgLPVp4yRZm8_eOqBB" -O subway.mp4
+
+          echo "Checking downloaded file..."
           ls -lh subway.mp4
           test -s subway.mp4
 
       - name: Start YouTube Vertical Live
         env:
           YT_STREAM_KEY: ${{ secrets.YT_STREAM_KEY }}
+
         run: |
+          echo "Starting Subway Surfers LIVE..."
+
           ffmpeg \
             -re \
             -stream_loop -1 \
@@ -35,11 +51,14 @@ jobs:
             -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30" \
             -c:v libx264 \
             -preset veryfast \
+            -profile:v high \
+            -level 4.2 \
             -pix_fmt yuv420p \
-            -b:v 3000k \
-            -maxrate 3500k \
-            -bufsize 6000k \
+            -b:v 6800k \
+            -maxrate 6800k \
+            -bufsize 13600k \
             -g 60 \
+            -keyint_min 60 \
             -c:a aac \
             -b:a 128k \
             -ar 44100 \
