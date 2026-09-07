@@ -3,15 +3,6 @@ name: Subway Forever Live
 on:
   workflow_dispatch:
 
-  schedule:
-    # Starts a fresh run roughly every 6 hours.
-    # GitHub schedules can sometimes be delayed.
-    - cron: "17 0,6,12,18 * * *"
-
-concurrency:
-  group: subway-youtube-live
-  cancel-in-progress: false
-
 jobs:
   stream:
     runs-on: ubuntu-latest
@@ -21,17 +12,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install FFmpeg
+      - name: Install FFmpeg and gdown
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade gdown
 
-      - name: Verify video
+      - name: Download Subway video from Google Drive
         run: |
-          ls -lah
-          test -f subway.mp4
+          gdown "https://drive.google.com/uc?id=1EWdVldEE77Zc-Jhvj4JMy6ac0jxvKRbz" -O subway.mp4
+          ls -lh subway.mp4
+          test -s subway.mp4
 
-      - name: Start vertical YouTube live
+      - name: Start YouTube Vertical Live
         env:
           YT_STREAM_KEY: ${{ secrets.YT_STREAM_KEY }}
         run: |
